@@ -31,12 +31,10 @@ const _IOC_NONE: usize = 0;
 
 macro_rules! _IOC {
 	($dir:expr, $type:expr, $nr:expr, $size:expr) => {
-		(
-			(($dir) << _IOC_DIRSHIFT) |
-				(($type) << _IOC_TYPESHIFT) |
-				(($nr) << _IOC_NRSHIFT) |
-				(($size) << _IOC_SIZESHIFT)
-		)
+		(($dir) << _IOC_DIRSHIFT) |
+			(($type) << _IOC_TYPESHIFT) |
+			(($nr) << _IOC_NRSHIFT) |
+			(($size) << _IOC_SIZESHIFT)
 	};
 }
 
@@ -55,7 +53,7 @@ const WHITESPACE_CHARS: [char; 3] = [ '\n', '\t', ' ' ];
 
 #[derive(Debug)]
 enum UsbDeviceIdentifier {
-	BusDev { bus: u16, dev: u16},
+	BusDev { bus: u16, dev: u16 },
 	VendorProduct { vid: u16, pid: u16 },
 	ProductName(String),
 }
@@ -122,7 +120,7 @@ fn find_device(identifier: UsbDeviceIdentifier) -> Result<UsbDevFsEntry> {
 		}
 	}
 
-	Err(std::io::Error::from(ErrorKind::NotFound))
+	Err(ErrorKind::NotFound.into())
 }
 
 fn reset_device(usbdev: UsbDevFsEntry) -> Result<()> {
@@ -143,7 +141,7 @@ fn reset_device(usbdev: UsbDevFsEntry) -> Result<()> {
 		Ok(())
 	} else {
 		println!("USB reset failed: {res}");
-		Err(std::io::Error::from(std::io::ErrorKind::Other))
+		Err(ErrorKind::Other.into())
 	}
 }
 
