@@ -7,4 +7,10 @@ edition = "2021"
 
 [dependencies]
 libc = "0.2"
-regex = "1.10"
+scanf = "1.2.1"
+
+[profile.release]
+lto = "fat"
+codegen-units = 1
+opt-level = "s"
+strip = "symbols"
