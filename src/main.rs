@@ -128,20 +128,17 @@ fn reset_device(usbdev: UsbDevFsEntry) -> Result<()> {
 	let dev_file = fs::OpenOptions::new().write(true).open(path)?;
 
 	#[cfg(target_env = "musl")]
-	let res = unsafe {
-		libc::ioctl(dev_file.as_raw_fd() as libc::c_int, USBDEVFS_RESET as libc::c_int)
-	};
+	let res = unsafe { libc::ioctl(dev_file.as_raw_fd() as libc::c_int, USBDEVFS_RESET as libc::c_int) };
+	
 	#[cfg(not(target_env = "musl"))]
-	let res = unsafe {
-		libc::ioctl(dev_file.as_raw_fd() as libc::c_int, USBDEVFS_RESET as libc::c_ulong)
-	};
+	let res = unsafe { libc::ioctl(dev_file.as_raw_fd() as libc::c_int, USBDEVFS_RESET as libc::c_ulong) };
 
-	if res == 0 {
+	if res < 0 {
+		println!("USB reset failed");
+		Err(std::io::Error::last_os_error())
+	} else {
 		println!("USB reset successful");
 		Ok(())
-	} else {
-		println!("USB reset failed: {res}");
-		Err(ErrorKind::Other.into())
 	}
 }
 
@@ -151,17 +148,15 @@ fn main() -> Result<()> {
 	let args = env::args().skip(1).collect::<Vec<String>>();
 	if args.len() < 1 {
 		println!("No usb device specified!");
-		return Err(std::io::Error::from(ErrorKind::InvalidInput).into());
+		return Err(ErrorKind::InvalidInput.into());
 	}
 
-	let identifier: UsbDeviceIdentifier;
-	
 	let (mut bus, mut dev) = (0, 0);
 	let (mut vid_str, mut pid_str) = (String::new(), String::new());
-
-	if scanf::sscanf!(&args[0], "{u16}/{u16}", bus, dev).is_ok() {
+	let identifier: UsbDeviceIdentifier;
+	if scanf::sscanf!(&args[0], "{}/{}", bus, dev).is_ok() {
 		identifier = UsbDeviceIdentifier::BusDev { bus, dev }
-	} else if scanf::sscanf!(&args[0], "{string}:{string}", vid_str, pid_str).is_ok() {
+	} else if scanf::sscanf!(&args[0], "{}:{}", vid_str, pid_str).is_ok() {
 		let vid = u16::from_str_radix(&vid_str[..], 16)
 			.map_err(|_| ErrorKind::InvalidData)?;
 		let pid = u16::from_str_radix(&pid_str[..], 16)
@@ -170,7 +165,7 @@ fn main() -> Result<()> {
 		identifier = UsbDeviceIdentifier::VendorProduct { vid, pid };
 	} else {
 		let mut name = String::new();
-		scanf::sscanf!(args[0].as_str(), "{string}", name)?;
+		scanf::sscanf!(args[0].as_str(), "{}", name)?;
 		identifier = UsbDeviceIdentifier::ProductName(name);
 	}
 
