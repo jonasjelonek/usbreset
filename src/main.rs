@@ -1,3 +1,5 @@
+#[cfg(not(target_os = "linux"))]
+compile_error!("only linux is supported");
 
 /* Constants taken/adopted from Linux's usbdevice_fs.h */
 /* Code inspired by Greg Kroah-Hartman's usbutils */
@@ -9,8 +11,6 @@ use std::os::fd::AsRawFd;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use std::io::Result;
-
-//use sscanf::sscanf;
 
 const _IOC_NRBITS: usize = 8;
 const _IOC_TYPEBITS: usize = 8;
