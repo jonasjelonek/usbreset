@@ -128,10 +128,10 @@ fn reset_device(usbdev: UsbDevFsEntry) -> Result<()> {
 	let dev_file = fs::OpenOptions::new().write(true).open(path)?;
 
 	#[cfg(target_env = "musl")]
-	let res = unsafe { libc::ioctl(dev_file.as_raw_fd() as libc::c_int, USBDEVFS_RESET as libc::c_int) };
+	let res = unsafe { libc::ioctl(dev_file.as_raw_fd(), USBDEVFS_RESET as libc::c_int) };
 	
 	#[cfg(not(target_env = "musl"))]
-	let res = unsafe { libc::ioctl(dev_file.as_raw_fd() as libc::c_int, USBDEVFS_RESET as libc::c_ulong) };
+	let res = unsafe { libc::ioctl(dev_file.as_raw_fd(), USBDEVFS_RESET as libc::c_ulong) };
 
 	if res < 0 {
 		println!("USB reset failed");
